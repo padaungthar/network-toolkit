@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetToolkit — Network Engineer Toolkit</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111a2e; --panel2:#0e1626; --line:#1e2a44;
+    --text:#e2e8f0; --muted:#8ea0bf; --accent:#38bdf8; --accent2:#818cf8;
+    --ok:#34d399; --bad:#f87171; --warn:#fbbf24; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  header{display:flex;align-items:center;gap:14px;padding:18px 28px;border-bottom:1px solid var(--line)}
+  .logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:800;color:#04101f;font-size:18px}
+  header h1{font-size:19px;margin:0}
+  header p{margin:0;color:var(--muted);font-size:13px}
+  nav{display:flex;gap:6px;padding:12px 28px;border-bottom:1px solid var(--line);background:var(--panel2);flex-wrap:wrap}
+  .tab{padding:9px 18px;border-radius:9px;cursor:pointer;color:var(--muted);font-weight:600;font-size:14px;border:1px solid transparent;user-select:none}
+  .tab:hover{color:var(--text);background:#16223c}
+  .tab.active{color:var(--text);background:#182742;border-color:var(--line)}
+  main{padding:26px 28px;max-width:1180px;margin:0 auto}
+  section{display:none}
+  section.active{display:block}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:18px}
+  .card h2{margin:0 0 4px;font-size:16px}
+  .card .sub{color:var(--muted);font-size:12.5px;margin:0 0 14px}
+  label{display:block;font-size:12px;color:var(--muted);font-weight:600;margin:0 0 5px;letter-spacing:.03em;text-transform:uppercase}
+  input,select,button{font:inherit;color:var(--text)}
+  input,select{background:#0a1120;border:1px solid var(--line);border-radius:9px;padding:10px 12px;width:100%}
+  input:focus,select:focus{outline:none;border-color:var(--accent)}
+  .row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+  .field{flex:1;min-width:180px}
+  .field.sm{flex:0 0 130px;min-width:110px}
+  button{background:#182742;border:1px solid #24365c;border-radius:9px;padding:10px 18px;font-weight:600;cursor:pointer}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  button.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#04101f}
+  button.primary:hover{filter:brightness(1.12);color:#04101f}
+  button.danger{border-color:#7f2d2d;color:var(--bad)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+  .b-v4{background:#0c3a55;color:var(--accent)}
+  .b-v6{background:#312e81;color:#a5b4fc}
+  .b-ok{background:#0b3527;color:var(--ok)}
+  .b-off{background:#3d1515;color:var(--bad)}
+  .b-warn{background:#3d2f0b;color:var(--warn)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{color:var(--muted);text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;padding:8px 10px;border-bottom:1px solid var(--line)}
+  td{padding:8px 10px;border-bottom:1px solid #16223c;font-family:var(--mono);font-size:13px;vertical-align:top}
+  tr:hover td{background:#121d33}
+  .kv{display:grid;grid-template-columns:230px 1fr;gap:0}
+  .kv>div{padding:7px 4px;border-bottom:1px solid #16223c;font-size:13.5px}
+  .kv>div:nth-child(odd){color:var(--muted);font-weight:600;font-size:12.5px}
+  .kv>div:nth-child(even){font-family:var(--mono);word-break:break-all}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:860px){.grid2{grid-template-columns:1fr}.kv{grid-template-columns:170px 1fr}}
+  .chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .chip{background:#0a1120;border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:13px}
+  .chip b{font-size:16px;font-family:var(--mono)}
+  .bar{height:9px;background:#0a1120;border:1px solid var(--line);border-radius:99px;overflow:hidden;margin:10px 0}
+  .bar>div{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .2s}
+  .err{color:var(--bad);font-size:13px;margin-top:10px;min-height:18px}
+  .note{background:#0d1a30;border:1px solid #1d3055;border-left:3px solid var(--accent);border-radius:10px;padding:12px 16px;font-size:13px;color:#b7c7e4;margin-top:14px}
+  code{background:#0a1120;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-family:var(--mono);font-size:12.5px}
+  .muted{color:var(--muted)}
+  .scroll{overflow:auto;max-height:520px;border:1px solid var(--line);border-radius:10px}
+  footer{padding:18px 28px;color:#5b6b8c;font-size:12px;border-top:1px solid var(--line);text-align:center}
+  ul{margin:8px 0;padding-left:20px}
+  li{margin:5px 0}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">NT</div>
+  <div>
+    <h1>NetToolkit — Network Engineer Toolkit</h1>
+    <p>IPv4 / IPv6 subnetting &nbsp;·&nbsp; IP-range ping sweep &nbsp;·&nbsp; host discovery</p>
+  </div>
+</header>
+
+<nav>
+  <div class="tab active" data-tab="subnet">Subnet Calculator</div>
+  <div class="tab" data-tab="sweep">Ping Sweep / Host Discovery</div>
+  <div class="tab" data-tab="about">About &amp; Limitations</div>
+</nav>
+
+<main>
+
+<!-- ================= SUBNET CALCULATOR ================= -->
+<section id="tab-subnet" class="active">
+  <div class="card">
+    <h2>Subnet Calculator <span id="familyBadge" class="badge b-v4" style="display:none"></span></h2>
+    <p class="sub">Auto-detects IPv4 / IPv6. Port of <code>IP Subnetting.py</code>. Accepts <code>a.b.c.d/prefix</code>, <code>a.b.c.d mask</code>, or <code>2001:db8::/32</code>.</p>
+    <div class="row">
+      <div class="field">
+        <label>IP address / network (CIDR)</label>
+        <input id="subIn" placeholder="e.g. 192.168.1.130/26  ·  10.0.0.0 255.255.255.240  ·  2001:db8::/32" spellcheck="false">
+      </div>
+      <button class="primary" id="calcBtn">Calculate</button>
+      <button id="subEx1">Sample IPv4</button>
+      <button id="subEx2">Sample IPv6</button>
+    </div>
+    <div class="err" id="subErr"></div>
+  </div>
+
+  <div id="subOut" style="display:none">
+    <div class="grid2">
+      <div class="card"><h2>Addressing</h2><div class="kv" id="v4Addr"></div><div class="kv" id="v6Addr" style="display:none"></div></div>
+      <div class="card"><h2>Range &amp; Capacity</h2><div class="kv" id="v4Range"></div><div class="kv" id="v6Range" style="display:none"></div></div>
+    </div>
+    <div class="card" id="v4BinCard"><h2>Binary Representation</h2><div class="kv" id="v4Bin"></div></div>
+  </div>
+</section>
+
+<!-- ================= PING SWEEP ================= -->
+<section id="tab-sweep">
+  <div class="card">
+    <h2>IP Range Scanner</h2>
+    <p class="sub">Port of <code>ping_script_with range of IP address.py</code> — sweeps a range and reports which devices respond. Browsers cannot send raw ICMP, so reachability is probed over TCP/HTTP (any HTTP reply = online). For true ICMP + nmap OS/MAC/hostname detection, run the companion Python script.</p>
+    <div class="row">
+      <div class="field">
+        <label>Start IP</label>
+        <input id="ipStart" placeholder="192.168.1.1" spellcheck="false">
+      </div>
+      <div class="field">
+        <label>End IP</label>
+        <input id="ipEnd" placeholder="192.168.1.254" spellcheck="false">
+      </div>
+      <div class="field sm">
+        <label>Probe port</label>
+        <input id="probePort" value="80" spellcheck="false">
+      </div>
+      <div class="field sm">
+        <label>Timeout ms</label>
+        <input id="probeTO" value="1500" spellcheck="false">
+      </div>
+      <div class="field sm">
+        <label>Parallel</label>
+        <input id="probeConc" value="64" spellcheck="false">
+      </div>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <button class="primary" id="scanBtn">Start Scan</button>
+      <button class="danger" id="stopBtn" disabled>Stop</button>
+      <button id="csvBtn" disabled>Export CSV</button>
+      <button id="swEx">Sample range</button>
+    </div>
+    <div class="err" id="swErr"></div>
+    <div class="bar"><div id="swBar"></div></div>
+    <div class="muted" id="swStatus" style="font-size:13px">Ready.</div>
+  </div>
+
+  <div class="card">
+    <div class="chips">
+      <div class="chip">Scanned <b id="cTotal">0</b></div>
+      <div class="chip" style="color:var(--ok)">Online <b id="cUp">0</b></div>
+      <div class="chip" style="color:var(--bad)">Offline <b id="cDown">0</b></div>
+      <div class="chip">Elapsed <b id="cTime">0.0s</b></div>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th style="width:40px">#</th><th>IP Address</th><th>Status</th><th>Latency</th><th>Hostname (PTR)</th><th style="width:110px"></th></tr></thead>
+        <tbody id="swBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ABOUT ================= -->
+<section id="tab-about">
+  <div class="card">
+    <h2>Feature Map</h2>
+    <ul>
+      <li><b>Subnet Calculator</b> — full port of <code>IP Subnetting.py</code>: network / broadcast / usable range / mask &amp; wildcard / IP class / scope detection, plus IPv6 (compressed &amp; expanded forms, address type, /64 capacity).</li>
+      <li><b>Ping Sweep</b> — port of <code>ping_script_with range of IP address.py</code>: iterate a start–end range, mark devices online/offline, measure response time, optional reverse-DNS (PTR) lookup per host, CSV export for reports.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h2>Browser Limitations (important)</h2>
+    <ul>
+      <li>Browsers cannot send <b>ICMP echo</b>. The sweep probes <b>TCP port 80</b> (configurable) via HTTP — a host that blocks that port will show offline even if it answers ping. Use the Python scripts for ICMP-accurate results.</li>
+      <li>OS / MAC / manufacturer detection requires <b>nmap</b> — run <code>ping_script_with range of IP address.py</code> locally for that (needs <code>sudo</code> for OS fingerprinting).</li>
+      <li>PTR lookups use public DNS-over-HTTPS (Cloudflare) and need internet access.</li>
+      <li>Best used from <code>file://</code> or an <code>http://</code> page. If hosted on HTTPS, browsers block probes to plain-HTTP LAN hosts (mixed content).</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h2>Companion Scripts</h2>
+    <ul>
+      <li><code>IP Subnetting.py</code> — CLI subnet calculator (IPv4 + IPv6, auto-detected by presence of <code>:</code>).</li>
+      <li><code>ping_script_with range of IP address.py</code> — ICMP sweep + nmap device info (OS, MAC, manufacturer, hostname).</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+<footer>NetToolkit · single-file, zero dependencies · for authorized network diagnostics only</footer>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+
+/* ---------- tabs ---------- */
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+  document.querySelectorAll("section").forEach(x => x.classList.remove("active"));
+  t.classList.add("active");
+  $("tab-" + t.dataset.tab).classList.add("active");
+}));
+
+/* ---------- helpers ---------- */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function commas(n){ const neg = n < 0n; let s = (neg ? -n : n).toString(); s = s.replace(/\B(?=(\d{3})+(?!\d))/g, ","); return (neg ? "-" : "") + s; }
+function kv(el, pairs){ el.innerHTML = pairs.map(p => "<div>" + esc(p[0]) + "</div><div>" + p[1] + "</div>").join(""); }
+
+/* ================= IPv4 ================= */
+function parseIPv4(s){
+  const m = s.trim().match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if(!m) throw new Error("Invalid IPv4 address: " + s);
+  const o = m.slice(1).map(Number);
+  if(o.some(x => x > 255)) throw new Error("IPv4 octet out of range (0-255): " + s);
+  return ((o[0]<<24)|(o[1]<<16)|(o[2]<<8)|o[3]) >>> 0;
+}
+function intToIPv4(v){ return [(v>>>24)&255,(v>>>16)&255,(v>>>8)&255,v&255].join("."); }
+function maskToPrefix(maskStr){
+  const m = parseIPv4(maskStr);
+  let p = 0, hitZero = false;
+  for(let i = 31; i >= 0; i--){
+    const bit = (m>>>i)&1;
+    if(bit){ if(hitZero) throw new Error("Invalid subnet mask (non-contiguous): " + maskStr); p++; }
+    else hitZero = true;
+  }
+  return p;
+}
+function ipv4Class(ip){
+  const a = ip>>>24;
+  if(a < 128)  return "Class A";
+  if(a < 192)  return "Class B";
+  if(a < 224)  return "Class C";
+  if(a < 240)  return "Class D (Multicast)";
+  return "Class E (Reserved)";
+}
+function ipv4Scope(ip){
+  const a = ip>>>24, b = (ip>>>16)&255;
+  if(a === 10) return "Private (RFC 1918)";
+  if(a === 172 && b >= 16 && b <= 31) return "Private (RFC 1918)";
+  if(a === 192 && b === 168) return "Private (RFC 1918)";
+  if(a === 127) return "Loopback";
+  if(a === 169 && b === 254) return "Link-Local (APIPA)";
+  if(a === 100 && b >= 64 && b <= 127) return "CGNAT (RFC 6598)";
+  if(a >= 224 && a < 240) return "Multicast";
+  if(a >= 240) return "Reserved";
+  return "Public";
+}
+function calcIPv4(raw){
+  let ipPart, prefix;
+  raw = raw.trim();
+  if(raw.includes("/")){
+    const parts = raw.split("/");
+    if(parts.length !== 2) throw new Error("Invalid CIDR notation");
+    ipPart = parts[0];
+    if(/^\d{1,2}$/.test(parts[1].trim())) prefix = parseInt(parts[1], 10);
+    else prefix = maskToPrefix(parts[1]);
+  } else if(/\s/.test(raw)){
+    const parts = raw.trim().split(/\s+/);
+    if(parts.length !== 2) throw new Error("Expected 'IP MASK' or 'IP/prefix'");
+    ipPart = parts[0]; prefix = maskToPrefix(parts[1]);
+  } else {
+    ipPart = raw; prefix = 24;
+  }
+  if(!(prefix >= 0 && prefix <= 32)) throw new Error("Prefix must be 0-32");
+  const ip = parseIPv4(ipPart);
+  const mask = prefix === 0 ? 0 : (0xFFFFFFFF << (32 - prefix)) >>> 0;
+  const net = (ip & mask) >>> 0;
+  const bc = (net | (~mask >>> 0)) >>> 0;
+  const wildcard = (~mask >>> 0);
+  let firstHost, lastHost, usable;
+  if(prefix <= 30){ firstHost = net + 1; lastHost = bc - 1; usable = Math.pow(2, 32 - prefix) - 2; }
+  else if(prefix === 31){ firstHost = net; lastHost = bc; usable = 2; }
+  else { firstHost = ip; lastHost = ip; usable = 1; }
+  const to2 = v => ((v>>>24)&255).toString(2).padStart(8,"0") + "." + ((v>>>16)&255).toString(2).padStart(8,"0") + "." + ((v>>>8)&255).toString(2).padStart(8,"0") + "." + (v&255).toString(2).padStart(8,"0");
+  $("familyBadge").style.display = "inline-block";
+  $("familyBadge").className = "badge b-v4";
+  $("familyBadge").textContent = "IPv4";
+  $("v4Addr").style.display = "grid"; $("v4Range").style.display = "grid"; $("v4BinCard").style.display = "block";
+  $("v6Addr").style.display = "none"; $("v6Range").style.display = "none";
+  kv($("v4Addr"), [
+    ["IP address", esc(intToIPv4(ip))],
+    ["IP class", esc(ipv4Class(ip))],
+    ["Scope / type", esc(ipv4Scope(ip))],
+    ["Network address", "<b style='color:var(--accent)'>" + esc(intToIPv4(net)) + "/" + prefix + "</b>"],
+    ["Broadcast address", esc(intToIPv4(bc))],
+    ["Subnet mask", esc(intToIPv4(mask))],
+    ["Wildcard mask", esc(intToIPv4(wildcard))],
+    ["Prefix length", "/" + prefix]
+  ]);
+  kv($("v4Range"), [
+    ["First host", esc(intToIPv4(firstHost))],
+    ["Last host", esc(intToIPv4(lastHost))],
+    ["Usable hosts", commas(BigInt(usable))],
+    ["Total addresses", commas(2n ** BigInt(32 - prefix))],
+    ["Hosts bits", String(32 - prefix)],
+    ["Network bits", String(prefix)]
+  ]);
+  kv($("v4Bin"), [
+    ["IP (binary)", esc(to2(ip))],
+    ["Mask (binary)", esc(to2(mask))],
+    ["Network (binary)", esc(to2(net))],
+    ["Broadcast (binary)", esc(to2(bc))]
+  ]);
+}
+
+/* ================= IPv6 ================= */
+function parseIPv6(str){
+  str = str.trim();
+  const pct = str.indexOf("%");
+  if(pct > -1) str = str.slice(0, pct);
+  if(str.includes("/")) str = str.split("/")[0];
+  if(!str) throw new Error("Empty IPv6 address");
+  let left, right = null;
+  if(str.includes("::")){
+    const p = str.split("::");
+    if(p.length !== 2) throw new Error("Invalid IPv6: multiple '::'");
+    left = p[0] ? p[0].split(":") : [];
+    right = p[1] ? p[1].split(":") : [];
+  } else {
+    left = str.split(":");
+  }
+  const expandV4 = arr => {
+    const last = arr[arr.length - 1];
+    if(last && last.includes(".")){
+      const v = parseIPv4(last);
+      arr.pop();
+      arr.push((((v>>>16)&0xFFFF)).toString(16), (v&0xFFFF).toString(16));
+    }
+  };
+  expandV4(left); if(right) expandV4(right);
+  if(left.some(g => !/^[0-9a-fA-F]{1,4}$/.test(g)) || (right && right.some(g => !/^[0-9a-fA-F]{1,4}$/.test(g))))
+    throw new Error("Invalid IPv6 group");
+  let groups = left.concat(right || []);
+  const missing = 8 - groups.length;
+  if(right){ if(missing < 1 && groups.length !== 8) throw new Error("Invalid IPv6"); }
+  else if(groups.length !== 8) throw new Error("IPv6 must have 8 groups or use '::'");
+  if(right && missing > 0){
+    const zeros = Array(missing).fill("0");
+    groups = left.concat(zeros, right);
+  }
+  if(groups.length !== 8) throw new Error("Invalid IPv6 group count");
+  let v = 0n;
+  for(const g of groups) v = (v << 16n) | BigInt(parseInt(g, 16));
+  return v;
+}
+function formatIPv6(v, compress){
+  const groups = [];
+  for(let i = 7; i >= 0; i--) groups.push(((v >> BigInt(i*16)) & 0xFFFFn).toString(16).padStart(compress ? 0 : 4, "0"));
+  if(!compress) return groups.join(":");
+  let best = -1, bestLen = 0, cur = -1, curLen = 0;
+  groups.forEach((g, i) => {
+    if(g === "0"){ if(cur < 0){cur = i; curLen = 1;} else curLen++; if(curLen > bestLen){best = cur; bestLen = curLen;} }
+    else { cur = -1; curLen = 0; }
+  });
+  if(bestLen < 2) return groups.join(":");
+  const h = groups.slice(0, best).join(":");
+  const t = groups.slice(best + bestLen).join(":");
+  return h + "::" + t;
+}
+function ipv6Type(v){
+  if(v === 0n) return "Unspecified (::)";
+  if(v === 1n) return "Loopback (::1)";
+  if((v >> 120n) === 0xFFn) return "Multicast (ff00::/8)";
+  if((v >> 118n) === 0x3FAn) return "Link-Local (fe80::/10)";
+  if((v >> 121n) === 0x7En) return "Unique Local (fc00::/7)";
+  if((v >> 96n) === 0x20010DB8n) return "Documentation (2001:db8::/32)";
+  if((v >> 112n) === 0x2002n) return "6to4 (2002::/16)";
+  if((v >> 96n) === 0x20010000n) return "Teredo (2001::/32)";
+  if((v >> 125n) === 1n) return "Global Unicast (2000::/3)";
+  return "Other / Reserved";
+}
+function calcIPv6(raw){
+  raw = raw.trim();
+  let addrPart = raw, prefix = 64;
+  if(raw.includes("/")){
+    const p = raw.split("/");
+    if(p.length !== 2) throw new Error("Invalid IPv6 CIDR");
+    addrPart = p[0];
+    prefix = parseInt(p[1], 10);
+    if(!(prefix >= 0 && prefix <= 128)) throw new Error("Prefix must be 0-128");
+  }
+  const ip = parseIPv6(addrPart);
+  const mask = prefix === 0 ? 0n : ((~0n) << BigInt(128 - prefix));
+  const net = ip & mask;
+  const last = net | (~mask & ((1n << 128n) - 1n));
+  const total = 1n << BigInt(128 - prefix);
+  const usable = prefix <= 126 ? total - 2n : total;
+  const first = prefix <= 126 ? net + 1n : net;
+  const lastHost = prefix <= 126 ? last - 1n : last;
+  $("familyBadge").style.display = "inline-block";
+  $("familyBadge").className = "badge b-v6";
+  $("familyBadge").textContent = "IPv6";
+  $("v4Addr").style.display = "none"; $("v4Range").style.display = "none"; $("v4BinCard").style.display = "none";
+  $("v6Addr").style.display = "grid"; $("v6Range").style.display = "grid";
+  kv($("v6Addr"), [
+    ["Input address", esc(formatIPv6(ip, true))],
+    ["Expanded form", esc(formatIPv6(ip, false))],
+    ["Address type", esc(ipv6Type(ip))],
+    ["Network address", "<b style='color:var(--accent)'>" + esc(formatIPv6(net, true)) + "/" + prefix + "</b>"],
+    ["Network (expanded)", esc(formatIPv6(net, false))],
+    ["Prefix length", "/" + prefix]
+  ]);
+  kv($("v6Range"), [
+    ["First address", esc(formatIPv6(first, true))],
+    ["Last address", esc(formatIPv6(lastHost, true))],
+    ["Usable hosts", prefix <= 126 ? commas(usable) : commas(usable) + " (no network/bcast reserved)"],
+    ["Total addresses", commas(total)],
+    ["Number of /64s", prefix <= 64 ? commas(1n << BigInt(64 - prefix)) : "n/a"],
+    ["Host bits", String(128 - prefix)]
+  ]);
+}
+
+/* ---------- subnet events ---------- */
+function runCalc(){
+  $("subErr").textContent = "";
+  const raw = $("subIn").value;
+  if(!raw.trim()){ $("subErr").textContent = "Enter an IP address or network."; return; }
+  try{
+    if(raw.includes(":")) calcIPv6(raw); else calcIPv4(raw);
+    $("subOut").style.display = "block";
+  }catch(e){
+    $("subOut").style.display = "none";
+    $("subErr").textContent = "Error: " + e.message;
+  }
+}
+$("calcBtn").addEventListener("click", runCalc);
+$("subIn").addEventListener("keydown", e => { if(e.key === "Enter") runCalc(); });
+$("subEx1").addEventListener("click", () => { $("subIn").value = "192.168.1.130/26"; runCalc(); });
+$("subEx2").addEventListener("click", () => { $("subIn").value = "2001:db8::/32"; runCalc(); });
+
+/* ================= PING SWEEP ================= */
+let scanState = { running:false, abort:false, results:[] };
+
+function parseSweepRange(){
+  const startStr = $("ipStart").value.trim();
+  const endStr = $("ipEnd").value.trim();
+  if(!startStr || !endStr) throw new Error("Enter start and end IPs");
+  if(startStr.includes(":") || endStr.includes(":")){
+    const s = parseIPv6(startStr), e = parseIPv6(endStr);
+    if(e < s) throw new Error("End IP is before start IP");
+    const count = e - s + 1n;
+    if(count > 65536n) throw new Error("Range too large (" + commas(count) + " addresses). Max 65,536.");
+    return { family:6, start:s, end:e, count:Number(count) };
+  }
+  const s = parseIPv4(startStr), e = parseIPv4(endStr);
+  if(e < s) throw new Error("End IP is before start IP");
+  const count = e - s + 1;
+  if(count > 65536) throw new Error("Range too large (" + count.toLocaleString() + " addresses). Max 65,536.");
+  return { family:4, start:s, end:e, count };
+}
+function rangeIP(r, i){
+  if(r.family === 4) return intToIPv4((r.start + i) >>> 0);
+  return formatIPv6(r.start + BigInt(i), true);
+}
+async function probeHost(ip, port, timeoutMs){
+  const t0 = performance.now();
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try{
+    await fetch("http://" + ip + ":" + port + "/favicon.ico?_=" + Date.now(),
+      { mode:"no-cors", cache:"no-store", signal:ctrl.signal });
+    return { online:true, ms:Math.round(performance.now() - t0) };
+  }catch(err){
+    return { online:false, ms:Math.round(performance.now() - t0) };
+  }finally{
+    clearTimeout(timer);
+  }
+}
+async function ptrLookup(ip){
+  if(ip.includes(":")) return null;
+  try{
+    const arpa = ip.split(".").reverse().join(".") + ".in-addr.arpa";
+    const r = await fetch("https://cloudflare-dns.com/dns-query?name=" + arpa + "&type=PTR",
+      { headers:{ accept:"application/dns-json" } });
+    const j = await r.json();
+    return (j.Answer && j.Answer[0]) ? j.Answer[0].data : null;
+  }catch(err){ return null; }
+}
+function addRow(idx, ip){
+  const tr = document.createElement("tr");
+  tr.id = "swr" + idx;
+  tr.innerHTML = "<td class='muted'>" + idx + "</td><td>" + esc(ip) + "</td><td class='st'><span class='badge b-warn'>scanning</span></td><td class='lat'>—</td><td class='ptr muted'>—</td><td><button class='ptrBtn' data-ip='" + esc(ip) + "' style='padding:3px 10px;font-size:12px'>Resolve</button></td>";
+  $("swBody").appendChild(tr);
+  return tr;
+}
+function updateChips(){
+  const up = scanState.results.filter(r => r.online).length;
+  const done = scanState.results.length;
+  $("cTotal").textContent = done;
+  $("cUp").textContent = up;
+  $("cDown").textContent = done - up;
+}
+async function runScan(){
+  if(scanState.running) return;
+  $("swErr").textContent = "";
+  let range, port, timeoutMs, conc;
+  try{
+    range = parseSweepRange();
+    port = parseInt($("probePort").value, 10);
+    timeoutMs = parseInt($("probeTO").value, 10);
+    conc = Math.max(1, Math.min(512, parseInt($("probeConc").value, 10) || 64));
+    if(!(port >= 1 && port <= 65535)) throw new Error("Probe port must be 1-65535");
+    if(!(timeoutMs >= 100 && timeoutMs <= 30000)) throw new Error("Timeout must be 100-30000 ms");
+  }catch(e){ $("swErr").textContent = "Error: " + e.message; return; }
+
+  if(range.count > 1024 && !confirm("Scanning " + range.count.toLocaleString() + " hosts over HTTP can take a while. Continue?")) return;
+
+  scanState = { running:true, abort:false, results:[] };
+  $("swBody").innerHTML = "";
+  $("scanBtn").disabled = true; $("stopBtn").disabled = false; $("csvBtn").disabled = true;
+  const t0 = performance.now();
+
+  let next = 0, done = 0;
+  const total = range.count;
+  const worker = async () => {
+    while(!scanState.abort){
+      const i = next++;
+      if(i >= total) break;
+      const ip = rangeIP(range, i);
+      const tr = addRow(i + 1, ip);
+      const res = await probeHost(ip, port, timeoutMs);
+      res.ip = ip;
+      scanState.results[i] = res;
+      const st = tr.querySelector(".st");
+      st.innerHTML = res.online ? "<span class='badge b-ok'>online</span>" : "<span class='badge b-off'>offline</span>";
+      tr.querySelector(".lat").textContent = res.online ? res.ms + " ms" : "—";
+      if(res.online){
+        const btn = tr.querySelector(".ptrBtn");
+        btn.disabled = false;
+      } else {
+        tr.querySelector(".ptrBtn").disabled = true;
+      }
+      done++;
+      $("swBar").style.width = (done / total * 100).toFixed(1) + "%";
+      $("swStatus").textContent = "Scanning… " + done + " / " + total.toLocaleString() + " (" + ip + ")";
+      $("cTime").textContent = ((performance.now() - t0) / 1000).toFixed(1) + "s";
+      updateChips();
+    }
+  };
+  await Promise.all(Array.from({length: Math.min(conc, total)}, worker));
+
+  const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
+  const up = scanState.results.filter(r => r.online).length;
+  $("swStatus").textContent = scanState.abort
+    ? "Stopped at " + done + " / " + total.toLocaleString() + " hosts — " + up + " online, " + elapsed + "s elapsed."
+    : "Done — " + total.toLocaleString() + " hosts scanned, " + up + " online, " + elapsed + "s elapsed.";
+  scanState.running = false;
+  $("scanBtn").disabled = false; $("stopBtn").disabled = true; $("csvBtn").disabled = false;
+}
+$("scanBtn").addEventListener("click", runScan);
+$("stopBtn").addEventListener("click", () => { scanState.abort = true; });
+$("swEx").addEventListener("click", () => { $("ipStart").value = "192.168.1.1"; $("ipEnd").value = "192.168.1.254"; });
+$("csvBtn").addEventListener("click", () => {
+  const lines = ["ip,status,latency_ms"];
+  for(const r of scanState.results) if(r) lines.push(r.ip + "," + (r.online ? "online" : "offline") + "," + (r.online ? r.ms : ""));
+  const blob = new Blob([lines.join("\n")], { type:"text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "ping_sweep_results.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+$("swBody").addEventListener("click", async e => {
+  const btn = e.target.closest(".ptrBtn");
+  if(!btn || btn.disabled) return;
+  btn.disabled = true; btn.textContent = "…";
+  const host = await ptrLookup(btn.dataset.ip);
+  const td = btn.closest("tr").querySelector(".ptr");
+  td.textContent = host || "not found";
+  td.classList.toggle("muted", !host);
+  btn.textContent = "Retry";
+  btn.disabled = false;
+});
+</script>
+</body>
+</html>
